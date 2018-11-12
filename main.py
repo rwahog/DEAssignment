@@ -1,7 +1,13 @@
 import sys
+from math import sin
+
+import numpy
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QMdiSubWindow, QApplication, QVBoxLayout, QPushButton, QDockWidget, \
     QWidget, QTextEdit, QFormLayout, QLabel, QLineEdit, QSizePolicy, QTabWidget
+from matplotlib import pyplot
+from matplotlib.backend_bases import NavigationToolbar2
+from matplotlib.backends.backend_qt5 import NavigationToolbar2QT
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -23,7 +29,8 @@ class TabWidget(QWidget):
 
         self.tab1.layout = QVBoxLayout()
         self.graph = PlotCanvas(self)
-        self.button = QPushButton("Button")
+        self.toolbar = NavigationToolbar2QT(self.graph, self)
+        self.tab1.layout.addWidget(self.toolbar)
         self.tab1.layout.addWidget(self.graph)
         self.tab1.setLayout(self.tab1.layout)
 
@@ -37,7 +44,8 @@ class PlotCanvas(FigureCanvas):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
 
-        FigureCanvas.__init__(self, fig)
+        self.canvas = FigureCanvas.__init__(self, fig)
+        # self.toolbar = NavigationToolbar2QT(self.canvas, self)
         self.setParent(parent)
 
         FigureCanvas.setSizePolicy(self,
@@ -46,9 +54,31 @@ class PlotCanvas(FigureCanvas):
         FigureCanvas.updateGeometry(self)
         self.plot()
 
+
     def plot(self):
-        ax = self.figure.add_subplot(111)
-        ax.set_title('Numerical Methods')
+        x0 = 1
+        y0 = 0.5
+        X = 7
+        N = 1000
+        step_size = (X - x0)/N
+        x = numpy.arange(x0, X, step_size, 'float')
+        c = -(3*numpy.e**(2*x0)+y0*numpy.e**(3*x0))/y0
+        r = -(3*numpy.e**(2*x))/ (numpy.e**(3*x)+c)
+        r[:-1][numpy.diff(r) < 0] = numpy.nan
+        bx = self.figure.add_subplot(111)
+        bx.spines['left'].set_color('black')
+        bx.spines['bottom'].set_color('black')
+        bx.xaxis.set_ticks_position('bottom')
+        bx.spines['top'].set_position(('data', 0))
+        bx.yaxis.set_ticks_position('left')
+        bx.spines['right'].set_position(('data', 0))
+        bx.set_xlabel('x')
+        bx.set_ylabel('y(x)')
+        bx.set_ylim([-10,10])
+        bx.plot(x, r, color="black", label="y(x)")
+        bx.grid()
+        bx.legend(loc='upper left')
+        bx.set_title('Numerical Methods')
         self.draw()
 
 
