@@ -58,14 +58,16 @@ class PlotCanvas(FigureCanvas):
         X = 5
         N = 1000
         step_size = (X - x0) / N
-        r = numpy.array(NumericalMethods.euler(self, Decimal(1), Decimal(0.5), Decimal(5), 1000))
-        improved = numpy.array(NumericalMethods.improved_euler(self, Decimal(1), Decimal(0.5), Decimal(5), 1000))
+        # r = numpy.array(NumericalMethods.euler(self, Decimal(1), Decimal(0.5), Decimal(5), 1000))
+        # improved = numpy.array(NumericalMethods.improved_euler(self, Decimal(1), Decimal(0.5), Decimal(5), 1000))
+        # rk = numpy.array(NumericalMethods.runge_kutta(self, Decimal(1), Decimal(0.5), Decimal(5), 1000))
         x = numpy.arange(x0, X, step_size)
         c = -(3 * numpy.e ** (2 * x0)+y0 * numpy.e ** (3*x0)) / y0
         exact = -(3*numpy.e**(2*x)) / (numpy.e**(3*x)+c)
-        r[:-1][numpy.diff(r) < 0] = numpy.nan
+        # r[:-1][numpy.diff(r) < 0] = numpy.nan
         exact[:-1][numpy.diff(exact) < 0] = numpy.inf
-        improved[:-1][numpy.diff(improved) < 0] = numpy.inf
+        # improved[:-1][numpy.diff(improved) < 0] = numpy.inf
+        # rk[:-1][numpy.diff(rk) < 0] = numpy.inf
         # print(NumericalMethods.evaluate_equation(self, Decimal(1.3894)))
         bx = self.figure.add_subplot(111)
         bx.axvline(x=numpy.log(6 * numpy.e ** 2 + numpy.e ** 3) / 3, linestyle='--', linewidth=0.5)
@@ -78,9 +80,10 @@ class PlotCanvas(FigureCanvas):
         bx.set_xlabel('x')
         bx.set_ylabel('y(x)')
         bx.set_ylim([-10, 10])
-        bx.plot(x, r, color="black", label="euler")
+        # bx.plot(x, r, color="black", label="euler")
+        bx.plot(x, rk, color="green", label="runge")
         bx.plot(x, exact, color="red", label="exact")
-        bx.plot(x, improved, color="blue", label="improved")
+        # bx.plot(x, improved, color="blue", label="improved")
         bx.grid()
         bx.legend(loc='upper left')
         bx.set_title('Numerical Methods')
@@ -155,6 +158,34 @@ class NumericalMethods:
             x += h
             l1.append(y)
             # print("here", x, y)
+        return l1
+
+    def runge_kutta(self, x0, y0, X, N):
+        l1 = []
+        h = Decimal((X - x0) / N)
+        x = x0
+        y = y0
+        h6 = h / 6
+        while x < (Decimal(numpy.log(6 * numpy.e ** 2 + numpy.e ** 3) / 3) - (h / 2)):
+            k1 = NumericalMethods.evaluate_DE(self, x, y)
+            k2 = NumericalMethods.evaluate_DE(self, x + h/2, y + ((h/2)*k1))
+            k3 = NumericalMethods.evaluate_DE(self, x + h/2, y + ((h/2)*k2))
+            k4 = NumericalMethods.evaluate_DE(self, x + h/2, y + (h*k3))
+            y += h6*(k1+(2*k2)+(2*k3)+k4)
+            x += h
+            print(x,y)
+            l1.append(y)
+        y = NumericalMethods.evaluate_equation(self, Decimal(numpy.log(6 * numpy.e ** 2 + numpy.e ** 3) / 3) + h)
+        x = Decimal(numpy.log(6 * numpy.e ** 2 + numpy.e ** 3) / 3) + (h / 2)
+        while x < X:
+            k1 = NumericalMethods.evaluate_DE(self, x, y)
+            k2 = NumericalMethods.evaluate_DE(self, x + h / 2, y + ((h / 2) * k1))
+            k3 = NumericalMethods.evaluate_DE(self, x + h / 2, y + ((h / 2) * k2))
+            k4 = NumericalMethods.evaluate_DE(self, x + h / 2, y + (h * k3))
+            y += h6 * (k1 + (2 * k2) + (2 * k3) + k4)
+            x += h
+            print(x, y)
+            l1.append(y)
         return l1
 
 
